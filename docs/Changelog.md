@@ -2,6 +2,14 @@
 
 All notable changes of this project will be documented in.
 
+## [6.0.24] - 2025-12-19
+
+### Changed
+
+* React Native GCanvas Component
+    * fix: on iOS in RN New Architecture the <GCanvasView/> is just black
+
+
 ## [6.0.23] - 2025-12-01
 
 ### Changed
