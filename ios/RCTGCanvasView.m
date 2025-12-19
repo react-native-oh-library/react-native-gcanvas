@@ -42,9 +42,19 @@
     return self;
 }
 
-- (void)reactSetFrame:(CGRect)frame{
+// New Architecture (Fabric) will invoke this
+- (void)setFrame:(CGRect)frame {
+    [super setFrame:frame];
+    [self handleFrameChange:frame];
+}
+
+// New Architecture (Paper) will invoke this
+- (void)reactSetFrame:(CGRect)frame {
     [super reactSetFrame:frame];
-    
+    [self handleFrameChange:frame];
+}
+
+- (void)handleFrameChange:(CGRect)frame {
     if( !self.glkview ){
         self.glkview = [[GLKView alloc] init];
         self.glkview.enableSetNeedsDisplay = YES;
