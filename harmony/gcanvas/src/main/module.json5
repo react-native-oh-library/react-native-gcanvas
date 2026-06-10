@@ -1,0 +1,7 @@
+{
+  module: {
+    name: 'gcanvas',
+    type: 'har',
+    deviceTypes: ['default'],
+  },
+}
