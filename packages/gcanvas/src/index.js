@@ -25,7 +25,7 @@ export function enable(
   } = {},
 ) {
   const GBridge = GImage.GBridge = GCanvas.GBridge = GWebGLRenderingContext.GBridge = GContext2D.GBridge = bridge;
-
+  console.log('GCanvas ref js', el.ref);
   GBridge.callEnable(el.ref, [
     0, // renderMode: 0--RENDERMODE_WHEN_DIRTY, 1--RENDERMODE_CONTINUOUSLY
     -1, // hybridLayerType:  0--LAYER_TYPE_NONE 1--LAYER_TYPE_SOFTWARE 2--LAYER_TYPE_HARDWARE
@@ -61,5 +61,6 @@ export function disable(canvas) {
   }
 
   const ref = canvas.id;
+  console.log('GCanvas 1disable', ref);
   GCanvas.GBridge.callDisable(ref);
 }

@@ -1,0 +1,2 @@
+
+export {GCanvas} from './native';
