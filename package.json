@@ -1,61 +1,80 @@
 {
-  "name": "@flyskywhy/react-native-gcanvas",
-  "version": "6.0.24",
-  "description": "A C++ native canvas 2D/WebGL component based on gpu opengl glsl shader GCanvas",
-  "main": "index",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/flyskywhy/react-native-gcanvas.git"
-  },
-  "keywords": [
-    "2d",
-    "3d",
-    "android",
-    "babylon",
-    "babylon.js",
-    "babylonjs",
-    "canvas",
-    "dogz",
-    "emoji",
-    "font",
-    "gcanvas",
-    "glsl",
-    "gpu",
-    "ios",
-    "multiple-touches",
-    "native",
-    "offscreen-canvas",
-    "particles-bg",
-    "pixel-animation-editor",
-    "pixel-art-animation-editor",
-    "pixel-art-editor",
-    "pixel-gif-editor",
-    "pixel-editor",
-    "pixi",
-    "proton",
-    "react-native",
-    "shader",
-    "opengl",
-    "webgl",
-    "zdog"
-  ],
-  "dependencies": {
-    "@flyskywhy/react-native-browser-polyfill": "^2.0.2"
-  },
-  "private": false,
-  "funding": [{
-    "type": "individual",
-    "url": "https://Alipay/flyskywhy@gmail.com"
-  },{
-    "type": "individual",
-    "url": "https://EthAddress/0xd02fa2738dcbba988904b5a9ef123f7a957dbb3e"
-  }],
-  "license": "Apache",
-  "bugs": {
-    "url": "https://github.com/flyskywhy/react-native-gcanvas/issues"
-  },
-  "homepage": "https://github.com/flyskywhy/react-native-gcanvas#readme"
-}
+    "name": "@react-native-ohos/react-native-gcanvas",
+    "version": "6.0.24.rc.1",
+    "description": "A C++ native canvas 2D/WebGL component based on gpu opengl glsl shader GCanvas",
+    "main": "./src/index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "codegen-lib": "react-native codegen-lib-harmony --no-safety-check --npm-package-name react-native-gcanvas --cpp-components-spec-paths ./src --cpp-output-path ./harmony/gcanvas/src/main/cpp/generated --ets-output-path ./harmony/gcanvas/src/main/ets/generated"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/flyskywhy/react-native-gcanvas.git"
+    },
+    "harmony": {
+        "alias": "@flyskywhy/react-native-gcanvas"
+      },
+    "files": [
+      "harmony",
+      "packages",
+	  "src",
+      "tools",
+	  "LICENSE",
+	  "README.MD"
+    ],  
+    "keywords": [
+      "2d",
+      "3d",
+      "android",
+      "babylon",
+      "babylon.js",
+      "babylonjs",
+      "canvas",
+      "dogz",
+      "emoji",
+      "font",
+      "gcanvas",
+      "glsl",
+      "gpu",
+      "ios",
+      "multiple-touches",
+      "native",
+      "offscreen-canvas",
+      "particles-bg",
+      "pixel-animation-editor",
+      "pixel-art-animation-editor",
+      "pixel-art-editor",
+      "pixel-gif-editor",
+      "pixel-editor",
+      "pixi",
+      "proton",
+      "react-native",
+      "shader",
+      "opengl",
+      "webgl",
+      "zdog",
+      "harmony"
+    ],
+    "dependencies": {
+      "@flyskywhy/react-native-browser-polyfill": "^2.0.2",
+      "@flyskywhy/react-native-gcanvas":"6.0.24"
+    },
+    "devDependencies": {
+      "@rnoh/react-native-harmony-cli": "npm:@react-native-oh/react-native-harmony-cli@^0.0.27"
+    },
+    "private": false,
+    "funding": [{
+      "type": "individual",
+      "url": "https://Alipay/flyskywhy@gmail.com"
+    },{
+      "type": "individual",
+      "url": "https://EthAddress/0xd02fa2738dcbba988904b5a9ef123f7a957dbb3e"
+    }],
+    "license": "Apache",
+    "bugs": {
+      "url": "https://github.com/flyskywhy/react-native-gcanvas/issues"
+    },
+    "author": "@flyskywhy",
+    "homepage": "https://github.com/flyskywhy/react-native-gcanvas#readme"
+  }
+  
