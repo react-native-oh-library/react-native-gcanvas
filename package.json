@@ -12,7 +12,13 @@
       "url": "git+https://github.com/flyskywhy/react-native-gcanvas.git"
     },
     "harmony": {
-        "alias": "@flyskywhy/react-native-gcanvas"
+        "alias": "@flyskywhy/react-native-gcanvas",
+        "autolinking": {
+ 	             "etsPackageClassName": "RNCGCanvasPackage",
+ 	             "cppPackageClassName": "RNCGCanvasPackage",
+ 	             "cmakeLibraryTargetName": "rnoh_gcanvas",
+ 	             "ohPackageName": "@react-native-ohos/react-native-gcanvas"
+ 	      }
       },
     "files": [
       "harmony",

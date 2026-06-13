@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import '@flyskywhy/react-native-browser-polyfill';
 import CanvasView from './CanvasView';
-import {enable, disable, ReactNativeBridge} from '@flyskywhy/react-native-gcanvas/packages/gcanvas';
+import {enable, disable, ReactNativeBridge} from '../../packages/gcanvas';
 ReactNativeBridge.GCanvasModule = NativeModules.GCanvasModule;
 ReactNativeBridge.Platform = Platform;
 
