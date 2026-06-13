@@ -9,11 +9,13 @@ import {
   Text,
   View,
   findNodeHandle,
+  TurboModuleRegistry
 } from 'react-native';
 import '@flyskywhy/react-native-browser-polyfill';
 import CanvasView from './CanvasView';
 import {enable, disable, ReactNativeBridge} from '../../packages/gcanvas';
-ReactNativeBridge.GCanvasModule = NativeModules.GCanvasModule;
+import GCanvasNativeModule from '../../packages/gcanvas/src/bridge/native-gcanvas';
+ReactNativeBridge.GCanvasModule = Platform.OS ==="harmony" ? GCanvasNativeModule:NativeModules.GCanvasModule;
 ReactNativeBridge.Platform = Platform;
 
 export default class GCanvasView extends Component {
@@ -327,3 +329,5 @@ export default class GCanvasView extends Component {
     }
   }
 }
+
+

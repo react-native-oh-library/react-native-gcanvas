@@ -2795,8 +2795,9 @@ namespace gcanvas {
         LOG_D("[webgl::exec] glVertexAttrib1f(%d, %f)", index, x);
         glVertexAttrib1f(index, x);
 
-        std::string &vertex = obj->mTempStr;
-        ParseTokensString(p, vertex);
+        //ParseTokensString(p, vertex)，这是多余的，而且会导致指针 p 被错误推进
+//        std::string &vertex = obj->mTempStr;
+//        ParseTokensString(p, vertex);
         return kContinue;
     }
 

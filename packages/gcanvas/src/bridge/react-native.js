@@ -8,6 +8,10 @@ const isReactNativeAndroid = () => {
   return GBridge.Platform.OS === 'android';
 };
 
+const isReactNativeHarmony= () => {
+  return GBridge.Platform.OS === 'harmony';
+};
+
 let isDebugging = false;
 
 let isComboDisabled = false;
@@ -223,7 +227,7 @@ const GBridge = {
       console.log('>>> texImage2D: ' + componentId, ...args);
     }
 
-    if (isReactNativeAndroid()) {
+    if (isReactNativeAndroid() || isReactNativeHarmony) {
       const [target, level, internalformat, format, type, image] = args;
       GBridge.GCanvasModule.texImage2D(componentId, target, level, internalformat, format, type, image.src);
     }
@@ -234,7 +238,7 @@ const GBridge = {
       console.log('>>> texSubImage2D: ' + componentId, ...args);
     }
 
-    if (isReactNativeAndroid()) {
+    if (isReactNativeAndroid() || isReactNativeHarmony) {
       const [target, level, xoffset, yoffset, format, type, image] = args;
       GBridge.GCanvasModule.texSubImage2D(componentId, target, level, xoffset, yoffset, format, type, image.src);
     }

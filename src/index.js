@@ -1,7 +1,7 @@
 import {Platform} from 'react-native';
 import GCanvasView from './components/GCanvasComponent';
-import GImage from '@flyskywhy/react-native-gcanvas/packages/gcanvas/src/env/image';
-import {ReactNativeBridge} from '@flyskywhy/react-native-gcanvas/packages/gcanvas';
+import GImage from '../packages/gcanvas/src/env/image';
+import {ReactNativeBridge} from '../packages/gcanvas';
 
 const createCanvas = (width, height) => {
   const canvas = document.createElement('canvas');

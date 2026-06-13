@@ -29,6 +29,7 @@ public:
                     std::string path);
     void TexSubImage2D(const std::string refId, int target, int level, int xoffset, int yoffset, int format, int type,
                        const std::string path);
+    void ResetComponent(std::string componentId);
 
 private:
     void CallTexImage2DToRender(OH_PixelmapNative *pixelmap,std::string refId, int target, int level, 
