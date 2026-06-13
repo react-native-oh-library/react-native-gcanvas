@@ -31,6 +31,10 @@ public:
                        const std::string path);
 
 private:
+    void CallTexImage2DToRender(OH_PixelmapNative *pixelmap,std::string refId, int target, int level, 
+        int internalformat, int format, int type, int xoffset,int yoffset,bool isSub);
+    
+private:
     std::shared_ptr<RNCGCanvasInstance> GetInstance(const std::string &componentId);
 };
 

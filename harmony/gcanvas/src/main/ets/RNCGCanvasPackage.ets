@@ -7,7 +7,6 @@ import { GCanvasModule } from './GCanvasModule'
 class ReanimatedTurboModulesFactory extends TurboModulesFactory {
   createTurboModule(name: string): UITurboModule | null {
     if (name === GCanvasModule.NAME) {
-      console.log("GCanvas ets GCanvasModule")
       return new GCanvasModule(this.ctx);
     }
     return null;

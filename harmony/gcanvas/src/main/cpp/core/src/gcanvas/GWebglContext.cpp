@@ -778,6 +778,7 @@ namespace gcanvas {
         GLenum status = glCheckFramebufferStatus(target);
 
         obj->setSyncResult(gcanvas::toString(status));
+        LOG_D("[webgl::exec] glCheckFramebufferStatus status(%d)", status);
         return kContinue;
     }
 
@@ -2330,13 +2331,14 @@ namespace gcanvas {
     }
 
     int stencilOpSeparate(GCanvasWeex *obj, const char *&p) {
+        LOG_D("[webgl::exec] glStencilOpSeparate start");
         const int *tokens = ParseTokensInt(p, 4);
         GLenum face = tokens[0];
         GLenum fail = tokens[1];
         GLenum zfail = tokens[2];
         GLenum zpass = tokens[3];
-
         glStencilOpSeparate(face, fail, zfail, zpass);
+        LOG_D("[webgl::exec] glStencilOpSeparate getError:%d",glGetError());
         LOG_D("[webgl::exec] glStencilOpSeparate(%s, %s, %s, %s)",
               GetMacroValDebug(face), GetMacroValDebug(fail), GetMacroValDebug(zfail),
               GetMacroValDebug(zpass));
@@ -2495,9 +2497,16 @@ namespace gcanvas {
 
         } else if (9 == args) {
             const int *tokens = ParseTokensInt(p, 9);
-            int bytes = tokens[8];
-            unsigned int size;
-            const GLvoid *array = SplitStringToArray(p, bytes, size);
+            const GLvoid *array = nullptr;
+            if (tokens[8] == 0) {
+                ParseTokensSkip(p);
+            } else {
+                std::string &buf = obj->mTempStr;
+                ParseTokensBase64(p, buf);
+                int bytes = tokens[8];
+                unsigned int size;
+                array = SplitStringToArray(buf.c_str(), bytes, size);
+            }
             glTexSubImage2D(tokens[0], tokens[1], tokens[2], tokens[3], tokens[4],
                             tokens[5], tokens[6], tokens[7], array);
 

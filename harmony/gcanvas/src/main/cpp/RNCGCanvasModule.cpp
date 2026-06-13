@@ -67,7 +67,6 @@ jsi::Value __hostFunction_extendCallNative(facebook::jsi::Runtime &rt, react::Tu
                 }
             }
         }
-        LOG_D("GCanvas __hostFunction_extendCallNative componentId = %s, count=%d", componentId.c_str(), count);
         if (!componentId.empty()) {
             auto self = static_cast<RNCGCanvasModule *>(&turboModule);
             resultValue = self->Render(componentId, cmdValue, typeValue);
@@ -567,6 +566,14 @@ void RNCGCanvasModule::LoadImage(const std::string url, const int imageId, std::
 
 void RNCGCanvasModule::TexImage2D(std::string refId, int target, int level, int internalformat, int format, int type,
                                   std::string url) {
+
+    if (startsWith(url, "data:image")) {
+        std::vector<uint8_t> imageData = decode_base64(url);
+        OH_PixelmapNative *pixelMap = createPixelmap_encodedData(imageData.data(), imageData.size());
+        CallTexImage2DToRender(pixelMap, refId, target, level, internalformat, format, type, 0, 0, false);
+        return;
+    }
+
     auto ctx = new TexImageTempPack;
     ctx->refId = refId;
     ctx->target = target;
@@ -586,68 +593,10 @@ void RNCGCanvasModule::TexImage2D(std::string refId, int target, int level, int 
             LOG_D("gcanvas TexImage2D ImageknifecImageDataGetPixelmap error code:%d", errorCode);
             return;
         }
-        auto size = GetPixelMapSize(pixelmap);
-        int pixelFormat = GetPixelMapFormat(pixelmap);
-        if (size.width == 0 || size.height == 0)
-            return;
-        int glInternalformat = ctx->internalformat;
-        int glFormat = ctx->format;
-        int bytesPerPixel = 4;
-        switch (pixelFormat) {
-        case 2: // RGB_565
-            glInternalformat = 0x1907;
-            glFormat = 0x1907;
-            bytesPerPixel = 2;
-            break;
-        case 3:                        // RGBA_8888
-        case 4:                        // BGRA_8888
-            glInternalformat = 0x1908; // GL_RGBA
-            glFormat = 0x1908;
-            bytesPerPixel = 4;
-            break;
-        case 5:                        // RGB_888
-            glInternalformat = 0x1907; // GL_RGB
-            glFormat = 0x1907;
-            bytesPerPixel = 3;
-            break;
-        default:
-            LOG_E("GCanvas the bitmap format=%d not support.", pixelFormat);
-            return;
-        }
-
-        size_t bufSize = (size_t)size.width * size.height * bytesPerPixel;
-        std::vector<uint8_t> pixels(bufSize);
-        Image_ErrorCode err = OH_PixelmapNative_ReadPixels(pixelmap, pixels.data(), &bufSize);
-        if (err != IMAGE_SUCCESS)
-            return;
-        
-
-        std::string pixelStr;
-        pixelStr.reserve(bufSize * 4);
-        for (size_t i = 0; i < bufSize; ++i) {
-            pixelStr += std::to_string(pixels[i]);
-            if (i + 1 < bufSize)
-                pixelStr += ',';
-        }
-
-        size_t srcLen = pixelStr.size();
-        size_t outLen = 0;
-        char *outBuf = new char[4 * ((srcLen + 2) / 3) + 1];
-        base64_encode(pixelStr.c_str(), srcLen, outBuf, &outLen, 0);
-        std::string base64Str(outBuf, outLen);
-        delete[] outBuf;
-
-        int arrayType = 1;
-        int border = 0;
-
-        std::string cmd = "102,9," + std::to_string(ctx->target) + "," + std::to_string(ctx->level) + "," +
-                          std::to_string(glInternalformat) + "," + std::to_string(size.width) + "," +
-                          std::to_string(size.height) + "," + std::to_string(border) + "," + std::to_string(glFormat) +
-                          "," + std::to_string(ctx->type) + "," + std::to_string(arrayType) + "," + base64Str;
-
         auto module = ctx->outerThis;
         if (module) {
-            module->Render(ctx->refId, cmd, 0x60000000);
+            module->CallTexImage2DToRender(pixelmap, ctx->refId, ctx->target, ctx->level, ctx->internalformat,
+                                           ctx->format, ctx->type, 0, 0, false);
         }
     };
     ImageknifecError requestError =
@@ -661,6 +610,12 @@ void RNCGCanvasModule::TexImage2D(std::string refId, int target, int level, int 
 void RNCGCanvasModule::TexSubImage2D(const std::string refId, int target, int level, int xoffset, int yoffset,
                                      int format, int type, const std::string url) {
 
+    if (startsWith(url, "data:image")) {
+        std::vector<uint8_t> imageData = decode_base64(url);
+        OH_PixelmapNative *pixelMap = createPixelmap_encodedData(imageData.data(), imageData.size());
+        CallTexImage2DToRender(pixelMap, refId, target, level, 0, format, type, xoffset, yoffset, true);
+        return;
+    }
     auto ctx = new TexImageTempPack;
     ctx->refId = refId;
     ctx->target = target;
@@ -681,66 +636,10 @@ void RNCGCanvasModule::TexSubImage2D(const std::string refId, int target, int le
             LOG_D("GCanvas TexImage2D ImageknifecImageDataGetPixelmap error code:%d", errorCode);
             return;
         }
-        auto size = GetPixelMapSize(pixelmap);
-        int pixelFormat = GetPixelMapFormat(pixelmap);
-        if (size.width == 0 || size.height == 0)
-            return;
-        int glInternalformat = ctx->internalformat;
-        int glFormat = ctx->format;
-        int bytesPerPixel = 4;
-        switch (pixelFormat) {
-        case 2: // RGB_565
-            glInternalformat = 0x1907;
-            glFormat = 0x1907;
-            bytesPerPixel = 2;
-            break;
-        case 3:                        // RGBA_8888
-        case 4:                        // BGRA_8888
-            glInternalformat = 0x1908; // GL_RGBA
-            glFormat = 0x1908;
-            bytesPerPixel = 4;
-            break;
-        case 5:                        // RGB_888
-            glInternalformat = 0x1907; // GL_RGB
-            glFormat = 0x1907;
-            bytesPerPixel = 3;
-            break;
-        default:
-            LOG_E("gcanvas the bitmap format=%d not support.", pixelFormat);
-            return;
-        }
-
-        size_t bufSize = (size_t)size.width * size.height * bytesPerPixel;
-        std::vector<uint8_t> pixels(bufSize);
-        Image_ErrorCode err = OH_PixelmapNative_ReadPixels(pixelmap, pixels.data(), &bufSize);
-        if (err != IMAGE_SUCCESS)
-            return;
-        
-        std::string pixelStr;
-        pixelStr.reserve(bufSize * 4);
-        for (size_t i = 0; i < bufSize; ++i) {
-            pixelStr += std::to_string(pixels[i]);
-            if (i + 1 < bufSize)
-                pixelStr += ',';
-        }
-
-        size_t srcLen = pixelStr.size();
-        size_t outLen = 0;
-        char *outBuf = new char[4 * ((srcLen + 2) / 3) + 1];
-        base64_encode(pixelStr.c_str(), srcLen, outBuf, &outLen, 0);
-        std::string base64Str(outBuf, outLen);
-        delete[] outBuf;
-
-        int arrayType = 1;
-        std::string cmd = "105,9," + std::to_string(ctx->target) + "," + std::to_string(ctx->level) + "," +
-                          std::to_string(ctx->xoffset) + "," + std::to_string(ctx->yoffset) + "," +
-                          std::to_string(size.width) + "," + std::to_string(size.height) + "," +
-                          std::to_string(ctx->format) + "," + std::to_string(ctx->type) + "," +
-                          std::to_string(arrayType) + "," + base64Str;
-
         auto module = ctx->outerThis;
         if (module) {
-            module->Render(ctx->refId, cmd, 0x60000000);
+            module->CallTexImage2DToRender(pixelmap, ctx->refId, ctx->target, ctx->level, 0, ctx->format, ctx->type,
+                                           ctx->xoffset, ctx->yoffset, true);
         }
     };
     ImageknifecError requestError =
@@ -798,5 +697,77 @@ void RNCGCanvasModule::Disable(std::string componentId) {
 //         node.SetDevicePixelRatio(ratio);
 //        canvasInstance->Disable(componentId);
     });
+}
+
+
+void RNCGCanvasModule::CallTexImage2DToRender(OH_PixelmapNative *pixelmap, std::string refId, int target, int level,
+                                              int internalformat, int format, int type, int xoffset, int yoffset,
+                                              bool isSub) {
+
+    auto size = GetPixelMapSize(pixelmap);
+    int pixelFormat = GetPixelMapFormat(pixelmap);
+    if (size.width == 0 || size.height == 0)
+        return;
+    int glInternalformat = internalformat;
+    int glFormat = format;
+    int bytesPerPixel = 4;
+    switch (pixelFormat) {
+    case 2: // RGB_565
+        glInternalformat = 0x1907;
+        glFormat = 0x1907;
+        bytesPerPixel = 2;
+        break;
+    case 3:                        // RGBA_8888
+    case 4:                        // BGRA_8888
+        glInternalformat = 0x1908; // GL_RGBA
+        glFormat = 0x1908;
+        bytesPerPixel = 4;
+        break;
+    case 5:                        // RGB_888
+        glInternalformat = 0x1907; // GL_RGB
+        glFormat = 0x1907;
+        bytesPerPixel = 3;
+        break;
+    default:
+        LOG_E("GCanvas the bitmap format=%d not support.", pixelFormat);
+        return;
+    }
+
+    size_t bufSize = (size_t)size.width * size.height * bytesPerPixel;
+    std::vector<uint8_t> pixels(bufSize);
+    Image_ErrorCode err = OH_PixelmapNative_ReadPixels(pixelmap, pixels.data(), &bufSize);
+    if (err != IMAGE_SUCCESS)
+        return;
+
+
+    std::string pixelStr;
+    pixelStr.reserve(bufSize * 4);
+    for (size_t i = 0; i < bufSize; ++i) {
+        pixelStr += std::to_string(pixels[i]);
+        if (i + 1 < bufSize)
+            pixelStr += ',';
+    }
+
+    size_t srcLen = pixelStr.size();
+    size_t outLen = 0;
+    char *outBuf = new char[4 * ((srcLen + 2) / 3) + 1];
+    base64_encode(pixelStr.c_str(), srcLen, outBuf, &outLen, 0);
+    std::string base64Str(outBuf, outLen);
+    delete[] outBuf;
+
+    int arrayType = 1;
+    int border = 0;
+    std::string cmd = "";
+    if (isSub) {
+        cmd = "105,9," + std::to_string(target) + "," + std::to_string(level) + "," + std::to_string(xoffset) + "," +
+              std::to_string(yoffset) + "," + std::to_string(size.width) + "," + std::to_string(size.height) + "," +
+              std::to_string(format) + "," + std::to_string(type) + "," + std::to_string(arrayType) + "," + base64Str;
+    } else {
+        cmd = "102,9," + std::to_string(target) + "," + std::to_string(level) + "," + std::to_string(glInternalformat) +
+              "," + std::to_string(size.width) + "," + std::to_string(size.height) + "," + std::to_string(border) +
+              "," + std::to_string(glFormat) + "," + std::to_string(type) + "," + std::to_string(arrayType) + "," +
+              base64Str;
+    }
+    Render(refId, cmd, 0x60000000);
 }
 }; // namespace rnoh

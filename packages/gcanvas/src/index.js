@@ -61,6 +61,5 @@ export function disable(canvas) {
   }
 
   const ref = canvas.id;
-  console.log('GCanvas 1disable', ref);
   GCanvas.GBridge.callDisable(ref);
 }

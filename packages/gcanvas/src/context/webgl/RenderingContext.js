@@ -592,10 +592,20 @@ export default class WebGLRenderingContext {
   }
 
   getBufferParameter = function(target, pname) {
-    const [type, res] = WebGLRenderingContext.GBridge.callNative(
+    let result = WebGLRenderingContext.GBridge.callNative(
       this._canvas.id,
       GLmethod.getBufferParameter + ',' + target + ',' + pname
     );
+    console.log('glGetBufferParameteriv', result)
+    let res;
+    if (typeof result === 'string' && result.includes(',')) {
+      const arr = result.split(',').map(Number);
+      const [type, val] = arr;
+      res = val;
+    } else {
+      const [type, val] = result;
+      res = val;
+    }
     return res;
   }
 
