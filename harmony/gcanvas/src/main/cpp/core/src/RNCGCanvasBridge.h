@@ -120,7 +120,7 @@ void gCanvasDrawImageData(const std::string contextId, int tw, int th, const std
     }
     GRenderer *render = GManager::getSingleton()->findRenderer(contextId);
     if (render != nullptr) {
-         render->drawImageData(tw, th, base64ImageData, sx, sy, sw, sh, dx, dy, dw, dh);
+        render->drawImageData(tw, th, base64ImageData, sx, sy, sw, sh, dx, dy, dw, dh);
     }
 }
 
@@ -135,4 +135,13 @@ void gCanvasDrawCanvas2Canvas(const std::string contextId, int tw, int th, const
     std::string base64ImageData = rnoh::gCanvasRender(srcContextId, renderCommands, 0x20000000);
 
     gCanvasDrawImageData(contextId, tw, th, base64ImageData, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+
+void glResetComponent(const std::string componentId) {
+    GCanvasManager *theManager = GCanvasManager::GetManager();
+    GCanvasWeex *theCanvas = (GCanvasWeex *)theManager->GetCanvas(componentId);
+    if (theCanvas) {
+        theCanvas->clearCmdQueue();
+        LOG_D("GCanvas ResetComponent clearCmdQueue done");
+    }
 }

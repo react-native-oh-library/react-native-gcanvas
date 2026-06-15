@@ -16,7 +16,6 @@
 #include "RNCGCanvasInstance.h"
 #include "CommonUtils.h"
 #include "RNOH/CppComponentInstance.h"
-#include "RNOH/RNInstanceInternal.h"
 #include <glog/logging.h>
 #include "imageknife.h"
 

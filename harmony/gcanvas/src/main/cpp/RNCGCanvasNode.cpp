@@ -206,5 +206,7 @@ void RNCGCanvasNode::DrawCanvas2Canvas(int tw, int th, std::string srcComponentI
     gCanvasDrawCanvas2Canvas(GetKey(), tw, th, srcComponentId, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
-
+void RNCGCanvasNode::ResetComponent(){
+    glResetComponent(GetKey());
+}
 } // namespace rnoh

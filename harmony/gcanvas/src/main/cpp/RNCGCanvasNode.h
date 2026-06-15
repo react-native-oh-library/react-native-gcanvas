@@ -28,6 +28,7 @@ public:
     void SurfaceChange();
     void SetDevicePixelRatio(double ratio);
     void BindTexture(OH_PixelmapNative *pixelmap, int imageID);
+    void ResetComponent();
     OH_PixelmapNative *GetNodePixelMap();
     void SetWindowAndSize(OHNativeWindow *window, uint64_t width, uint64_t height);
 

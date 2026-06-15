@@ -351,6 +351,19 @@ jsi::Value __hostFunction_texSubImage2D(facebook::jsi::Runtime &rt, react::Turbo
     }
     return facebook::jsi::Value::undefined();
 }
+
+jsi::Value __hostFunction_resetComponent(facebook::jsi::Runtime &rt, react::TurboModule &turboModule,
+                                           const facebook::jsi::Value *args, size_t count) {
+    if (count >= 1 && args[0].isString()) {
+        std::string componentId = args[0].getString(rt).utf8(rt);
+        auto self = static_cast<RNCGCanvasModule *>(&turboModule);
+        self->ResetComponent(componentId);
+    }
+    return facebook::jsi::Value::undefined();
+}
+
+
+
 RNCGCanvasModule::RNCGCanvasModule(const ArkTSTurboModule::Context ctx, const std::string name)
     : ArkTSTurboModule(ctx, name) {
     methodMap_["enable"] = MethodMetadata{2, __hostFunction_enable};
@@ -367,7 +380,7 @@ RNCGCanvasModule::RNCGCanvasModule(const ArkTSTurboModule::Context ctx, const st
     methodMap_["getFontNames"] = MethodMetadata{0, __hostFunction_getFontNames};
     methodMap_["texImage2D"] = MethodMetadata{7, __hostFunction_texImage2D};
     methodMap_["texSubImage2D"] = MethodMetadata{7, __hostFunction_texSubImage2D};
-
+    methodMap_["resetComponent"] = MethodMetadata{1, __hostFunction_resetComponent};
     methodMap_["disable"] = MethodMetadata{1, __hostFunction_disabled};
 }
 
@@ -684,19 +697,12 @@ void RNCGCanvasModule::DrawCanvas2Canvas(const std::string componentId, int tw, 
 
 
 void RNCGCanvasModule::Disable(std::string componentId) {
-    m_ctx.taskExecutor->runTask(TaskThread::MAIN, [weakSelf = weak_from_this(), componentId] {
-        auto self = weakSelf.lock();
-        if (!self)
-            return;
-        auto canvasInstance = self->GetInstance(componentId);
-        if (!canvasInstance) {
-            LOG_E("GCanvas Disable can not find canvas with id ===> %s", componentId.c_str());
-            return;
-        }
-//        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
-//         node.SetDevicePixelRatio(ratio);
-//        canvasInstance->Disable(componentId);
-    });
+
+    auto canvasInstance = GetInstance(componentId);
+    if (!canvasInstance) {
+        LOG_E("GCanvas Disable can not find canvas with id ===> %s", componentId.c_str());
+        return;
+    }
 }
 
 
@@ -770,4 +776,13 @@ void RNCGCanvasModule::CallTexImage2DToRender(OH_PixelmapNative *pixelmap, std::
     }
     Render(refId, cmd, 0x60000000);
 }
+
+void RNCGCanvasModule::ResetComponent(std::string componentId) {
+    auto canvasInstance = GetInstance(componentId);
+    if (canvasInstance) {
+        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
+        node.ResetComponent();
+    }
+}
+
 }; // namespace rnoh
