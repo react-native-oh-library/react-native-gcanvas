@@ -34,10 +34,11 @@ public:
 
     void DrawCanvas2Canvas(int tw, int th, std::string srcComponentId, int sx, int sy, int sw, int sh, int dx, int dy,
                            int dw, int dh);
+    
+    void destroy();
 
 private:
     void setReady(bool ready) { isReady = ready; }
-    void destroy();
 
 private:
     OH_NativeXComponent_Callback m_xComponentCallback_;
