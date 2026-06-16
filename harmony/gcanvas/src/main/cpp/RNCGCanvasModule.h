@@ -8,6 +8,8 @@
 #define HARMONY_RNCGCANVASMODULE_H
 #include "RNOH/ArkTSTurboModule.h"
 #include "RNCGCanvasInstance.h"
+#include "cmd/IReactCacheCmd.h"
+
 namespace rnoh {
 class JSI_EXPORT RNCGCanvasModule : public std::enable_shared_from_this<RNCGCanvasModule>, public ArkTSTurboModule {
 public:
@@ -34,9 +36,13 @@ public:
 private:
     void CallTexImage2DToRender(OH_PixelmapNative *pixelmap,std::string refId, int target, int level, 
         int internalformat, int format, int type, int xoffset,int yoffset,bool isSub);
+    void ExecuteCachedCommands(const std::string& componentId, RNCGCanvasNode* node);
+    std::shared_ptr<RNCGCanvasNode> GetNodeFromCache(const std::string& componentId);
     
 private:
     std::shared_ptr<RNCGCanvasInstance> GetInstance(const std::string &componentId);
+    std::unordered_map<std::string, std::shared_ptr<rnoh::RNCGCanvasNode>> m_cacheNodeMap;
+    std::unordered_map<std::string, std::vector<IReactCacheCmd*>> m_cacheCmdList; 
 };
 
 
@@ -50,7 +56,7 @@ struct PreLoadImageCallbackContext {
     int imageId;
     std::string url;
     bool isPreload{false};
-    std::shared_ptr<RNCGCanvasInstance> instance{nullptr};
+    std::shared_ptr<rnoh::RNCGCanvasNode> nodePtr{nullptr};
 };
 
 /**

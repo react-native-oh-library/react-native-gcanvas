@@ -353,7 +353,7 @@ jsi::Value __hostFunction_texSubImage2D(facebook::jsi::Runtime &rt, react::Turbo
 }
 
 jsi::Value __hostFunction_resetComponent(facebook::jsi::Runtime &rt, react::TurboModule &turboModule,
-                                           const facebook::jsi::Value *args, size_t count) {
+                                         const facebook::jsi::Value *args, size_t count) {
     if (count >= 1 && args[0].isString()) {
         std::string componentId = args[0].getString(rt).utf8(rt);
         auto self = static_cast<RNCGCanvasModule *>(&turboModule);
@@ -361,7 +361,6 @@ jsi::Value __hostFunction_resetComponent(facebook::jsi::Runtime &rt, react::Turb
     }
     return facebook::jsi::Value::undefined();
 }
-
 
 
 RNCGCanvasModule::RNCGCanvasModule(const ArkTSTurboModule::Context ctx, const std::string name)
@@ -384,7 +383,10 @@ RNCGCanvasModule::RNCGCanvasModule(const ArkTSTurboModule::Context ctx, const st
     methodMap_["disable"] = MethodMetadata{1, __hostFunction_disabled};
 }
 
-RNCGCanvasModule::~RNCGCanvasModule() {}
+RNCGCanvasModule::~RNCGCanvasModule() {
+    m_cacheNodeMap.clear();
+    m_cacheCmdList.clear();
+}
 
 std::shared_ptr<RNCGCanvasInstance> RNCGCanvasModule::GetInstance(const std::string &componentId) {
     auto instance = m_ctx.instance.lock();
@@ -397,7 +399,7 @@ std::shared_ptr<RNCGCanvasInstance> RNCGCanvasModule::GetInstance(const std::str
     }
     auto componentInstance = instanceCAPI->findComponentInstanceByTag(std::stoi(componentId));
     if (!componentInstance) {
-        LOG(ERROR) << "GCanvas Enable findComponentInstanceByTag failed";
+        LOG(ERROR) << "GCanvas Enable findComponentInstanceByTag failed componentId:" << componentId;
         return nullptr;
     }
     auto canvasInstance = std::dynamic_pointer_cast<RNCGCanvasInstance>(componentInstance);
@@ -405,46 +407,101 @@ std::shared_ptr<RNCGCanvasInstance> RNCGCanvasModule::GetInstance(const std::str
         LOG(ERROR) << "GCanvas Enable get RNCGCanvasInstance failed:";
         return nullptr;
     }
+    LOG(ERROR) << "GCanvas Enable get RNCGCanvasInstance success  componentId:" << componentId;
     return canvasInstance;
 }
 
 void RNCGCanvasModule::Enable(std::string componentId) {
-    auto canvasInstance = GetInstance(componentId);
-    if (canvasInstance) {
-        LOG_D("GCanvas enable");
+    auto node = GetNodeFromCache(componentId);
+    if (node) {
+        ExecuteCachedCommands(componentId, node.get());
+        return;
+    }
+    this->m_ctx.taskExecutor->runTask(TaskThread::MAIN, [weakSelf = weak_from_this(), componentId]() {
+        auto self = weakSelf.lock();
+        if (!self) {
+            return;
+        }
+        auto canvasInstance = self->GetInstance(componentId);
+        if (!canvasInstance) {
+            return;
+        }
+        auto &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
+        if (!node.IsReady()) {
+            return;
+        }
+        auto nodePtr = std::shared_ptr<RNCGCanvasNode>(&node, [](RNCGCanvasNode *) {
+            // 自定义删除器，不实际删除，因为节点由 ArkUI 管理生命周期
+        });
+
+        self->m_cacheNodeMap.insert_or_assign(componentId, nodePtr);
+        self->ExecuteCachedCommands(componentId, &node);
+    });
+}
+
+std::shared_ptr<RNCGCanvasNode> RNCGCanvasModule::GetNodeFromCache(const std::string &componentId) {
+    auto it = m_cacheNodeMap.find(componentId);
+    if (it == m_cacheNodeMap.end()) {
+        return nullptr;
+    }
+    if (!it->second) {
+        return nullptr;
+    }
+    if (!it->second->IsReady()) {
+        return nullptr;
+    }
+
+    return it->second;
+}
+
+
+void RNCGCanvasModule::ExecuteCachedCommands(const std::string &componentId, RNCGCanvasNode *node) {
+    if (!node || !node->IsReady()) {
+        return;
+    }
+
+    auto listIt = m_cacheCmdList.find(componentId);
+    if (listIt == m_cacheCmdList.end()) {
+        return;
+    }
+
+    auto cmdList = std::move(listIt->second);
+    m_cacheCmdList.erase(listIt);
+
+    for (IReactCacheCmd *cmd : cmdList) {
+        if (cmd) {
+            cmd->execute();
+        }
     }
 }
+
 void RNCGCanvasModule::ResetGlViewport(std::string componentId) {
-    auto canvasInstance = GetInstance(componentId);
-    if (canvasInstance) {
+    auto node = GetNodeFromCache(componentId);
+    if (node) {
         LOG_D("GCanvas ResetGlViewport");
-        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
-        node.SurfaceChange();
+        node->SurfaceChange();
     }
 }
 std::string RNCGCanvasModule::Render(std::string componentId, std::string cmd, int type) {
-    auto canvasInstance = GetInstance(componentId);
-    if (canvasInstance) {
-        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
-        return node.Render(cmd, type);
+    auto node = GetNodeFromCache(componentId);
+    if (node) {
+        return node->Render(cmd, type);
     }
     return "";
 }
 
 void RNCGCanvasModule::SetContextType(int type, std::string componentId) {
-    auto canvasInstance = GetInstance(componentId);
-    if (canvasInstance) {
-        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
-        node.SetDevicePixelRatio(node.GetDensity());
-        node.SetWrapperContextType(type);
+    auto node = GetNodeFromCache(componentId);
+    if (node) {
+        node->SetDevicePixelRatio(node->GetDensity());
+        node->SetWrapperContextType(type);
     }
 }
 
 void RNCGCanvasModule::SetDevicePixelRatio(std::string componentId, double ratio) {
-    auto canvasInstance = GetInstance(componentId);
-    if (canvasInstance) {
-        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
-        node.SetDevicePixelRatio(ratio);
+    auto node = GetNodeFromCache(componentId);
+    if (node) {
+        node->SetDevicePixelRatio(ratio);
     }
 }
 
@@ -478,8 +535,10 @@ void RNCGCanvasModule::LoadImage(const std::string url, const int imageId, std::
             }
         }
         if (!isPreLoad && !componentId.empty()) {
-            RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(GetInstance(componentId)->getLocalRootArkUINode());
-            node.BindTexture(std::move(pixelMap), imageId);
+            auto node = GetNodeFromCache(componentId);
+            if (node) {
+                node->BindTexture(std::move(pixelMap), imageId);
+            }
         }
         return;
     }
@@ -491,7 +550,10 @@ void RNCGCanvasModule::LoadImage(const std::string url, const int imageId, std::
     ctx->url = url;
     ctx->isPreload = isPreLoad;
     if (!isPreLoad) {
-        ctx->instance = GetInstance(componentId);
+        auto node = GetNodeFromCache(componentId);
+        if (node) {
+            ctx->nodePtr = node;
+        }
     }
 
     ImageknifecGetCacheImageCallbackObject callbackObject;
@@ -512,9 +574,8 @@ void RNCGCanvasModule::LoadImage(const std::string url, const int imageId, std::
         auto taskExecutor = ctx->taskExecutor;
         int imageId = ctx->imageId;
         std::string url = ctx->url;
-        if (!ctx->isPreload && ctx->instance) {
-            RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(ctx->instance->getLocalRootArkUINode());
-            node.BindTexture(std::move(pixelmap), ctx->imageId);
+        if (!ctx->isPreload && ctx->nodePtr) {
+            ctx->nodePtr->BindTexture(std::move(pixelmap), ctx->imageId);
             ImageknifecImageDataRelease(imageData);
             return;
         }
@@ -664,10 +725,9 @@ void RNCGCanvasModule::TexSubImage2D(const std::string refId, int target, int le
 }
 
 std::string RNCGCanvasModule::ToDataURL(std::string componentId, std::string mimeType, float quality) {
-    auto canvasInstance = GetInstance(componentId);
-    if (canvasInstance) {
-        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
-        OH_PixelmapNative *pixelMap = node.GetNodePixelMap();
+    auto node = GetNodeFromCache(componentId);
+    if (node) {
+        OH_PixelmapNative *pixelMap = node->GetNodePixelMap();
         if (pixelMap) {
             std::string result = decodeCode_pixelmap(pixelMap, mimeType, static_cast<int>(quality));
             OH_PixelmapNative_Release(pixelMap);
@@ -682,27 +742,25 @@ void RNCGCanvasModule::DrawCanvas2Canvas(const std::string componentId, int tw, 
                                          int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh) {
 
     std::string srcKey = "";
-    auto srcCanvasInstance = GetInstance(srcCanvasId);
-    if (srcCanvasInstance) {
-        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(srcCanvasInstance->getLocalRootArkUINode());
-        srcKey = node.GetKey();
+    auto srcNode = GetNodeFromCache(srcCanvasId);
+    if (srcNode) {
+        srcKey = srcNode->GetKey();
     }
-
-    auto canvasInstance = GetInstance(componentId);
-    if (canvasInstance && !srcKey.empty()) {
-        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
-        node.DrawCanvas2Canvas(tw, th, srcKey, sx, sy, sw, sh, dx, dy, dw, dh);
+    auto node = GetNodeFromCache(componentId);
+    if (node && !srcKey.empty()) {
+        node->DrawCanvas2Canvas(tw, th, srcKey, sx, sy, sw, sh, dx, dy, dw, dh);
     }
 }
 
 
 void RNCGCanvasModule::Disable(std::string componentId) {
-
-    auto canvasInstance = GetInstance(componentId);
-    if (!canvasInstance) {
-        LOG_E("GCanvas Disable can not find canvas with id ===> %s", componentId.c_str());
+    auto it = m_cacheNodeMap.find(componentId);
+    if (it == m_cacheNodeMap.end()) {
         return;
     }
+    it->second->destroy();
+    m_cacheCmdList.erase(componentId);
+    m_cacheNodeMap.erase(it);
 }
 
 
@@ -778,10 +836,9 @@ void RNCGCanvasModule::CallTexImage2DToRender(OH_PixelmapNative *pixelmap, std::
 }
 
 void RNCGCanvasModule::ResetComponent(std::string componentId) {
-    auto canvasInstance = GetInstance(componentId);
-    if (canvasInstance) {
-        RNCGCanvasNode &node = static_cast<RNCGCanvasNode &>(canvasInstance->getLocalRootArkUINode());
-        node.ResetComponent();
+    auto node = GetNodeFromCache(componentId);
+    if (node) {
+        node->ResetComponent();
     }
 }
 
