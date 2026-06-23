@@ -6,7 +6,7 @@
   "name": "@react-native-ohos/react-native-gcanvas",
   "description": "Please describe the basic information.",
   "main": "index.ets",
-  "version": "6.1.0-rc.1",
+  "version": "6.0.25-rc.1",
   "dependencies": {
     "@rnoh/react-native-openharmony": "file:../../node_modules/@react-native-oh/react-native-harmony/react_native_openharmony.har",
     "@ohos/imageknifepro": "1.0.14"
