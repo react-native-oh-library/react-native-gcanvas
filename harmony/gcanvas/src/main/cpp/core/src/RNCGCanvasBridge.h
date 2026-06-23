@@ -1,8 +1,17 @@
-//
-// Created on 2026/5/7.
-//
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
+/*
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #pragma once
 #ifndef OHOS
@@ -12,11 +21,13 @@
 #include <string>
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include "gmanager.h"
-
+#include "GSystemFontInformation.h"
+#include <vector>
+#include <list>
 
 namespace rnoh {
 
-void gCanvasSurfaceCreated(std::string canvasId, OHNativeWindow *window, uint64_t width, uint64_t height,
+inline void gCanvasSurfaceCreated(std::string canvasId, OHNativeWindow *window, uint64_t width, uint64_t height,
                            std::string clearColor) {
     LOG_D("SurfaceCreated canvasId=%s,width=%d,height=%d，clearColor=%s\n", canvasId.c_str(), width, height,
           clearColor.c_str());
@@ -46,10 +57,10 @@ void gCanvasSurfaceCreated(std::string canvasId, OHNativeWindow *window, uint64_
         }
     }
 }
-void SurfaceChange(OHNativeWindow *window, uint64_t width, uint64_t height) {}
-void SurfaceDestroy() {}
+inline void SurfaceChange(OHNativeWindow *window, uint64_t width, uint64_t height) {}
+inline void SurfaceDestroy() {}
 
-void gCanvasSetContextType(std::string canvasId, int type) {
+inline void gCanvasSetContextType(std::string canvasId, int type) {
     LOG_D("gCanvasSetContextType canvasId=%s,type=%d\n", canvasId.c_str(), type);
     GRenderer *render = GManager::getSingleton()->findRenderer(canvasId);
     if (!render) {
@@ -64,7 +75,7 @@ void gCanvasSetContextType(std::string canvasId, int type) {
     LOG_D("SetContextType end");
 }
 
-void gCanvasSetDevicePixelRatio(std::string canvasId, double ratio) {
+inline void gCanvasSetDevicePixelRatio(std::string canvasId, double ratio) {
     LOG_D("gCanvasSetDevicePixelRatio canvasId=%s,ratio=%d\n", canvasId.c_str(), ratio);
     GRenderer *render = GManager::getSingleton()->findRenderer(canvasId);
     if (!render) {
@@ -75,7 +86,7 @@ void gCanvasSetDevicePixelRatio(std::string canvasId, double ratio) {
     }
 }
 
-void gCanvasSetHiQuality(std::string canvasId, bool isHiQuality) {
+inline void gCanvasSetHiQuality(std::string canvasId, bool isHiQuality) {
     LOG_D("gCanvasSetHiQuality canvasId=%s,isHiQuality=%d\n", canvasId.c_str(), isHiQuality);
     GCanvasManager *theManager = GCanvasManager::GetManager();
     GCanvasWeex *theCanvas = (GCanvasWeex *)theManager->GetCanvas(canvasId);
@@ -83,7 +94,7 @@ void gCanvasSetHiQuality(std::string canvasId, bool isHiQuality) {
         theCanvas->GetGCanvasContext()->SetHiQuality(isHiQuality);
     }
 }
-std::string gCanvasRender(std::string canvasId, std::string renderCommands, int type) {
+inline std::string gCanvasRender(std::string canvasId, std::string renderCommands, int type) {
     LOG_D("gCanvasRender canvasId=%s,renderCommands=%s,type=%d\n", canvasId.c_str(), renderCommands.c_str(), type);
     GCanvasManager *theManager = GCanvasManager::GetManager();
     GCanvasWeex *theCanvas = (GCanvasWeex *)theManager->GetCanvas(canvasId);
@@ -94,16 +105,16 @@ std::string gCanvasRender(std::string canvasId, std::string renderCommands, int 
     }
     return "";
 }
-} // namespace rnoh
 
-void gCanvasDestroy(std::string canvasId) {
+
+inline void gCanvasDestroy(std::string canvasId) {
     GRenderer *render = GManager::getSingleton()->findRenderer(canvasId);
     if (render) {
         render->surfaceDestroy();
     }
 }
 
-void gCanvasBindTexture(OH_PixelmapNative *pixelmap, std::string canvasId, int imageID) {
+inline void gCanvasBindTexture(OH_PixelmapNative *pixelmap, std::string canvasId, int imageID) {
     if (canvasId.empty()) {
         return;
     }
@@ -113,7 +124,7 @@ void gCanvasBindTexture(OH_PixelmapNative *pixelmap, std::string canvasId, int i
     }
 }
 
-void gCanvasDrawImageData(const std::string contextId, int tw, int th, const std::string base64ImageData, int sx,
+inline void gCanvasDrawImageData(const std::string contextId, int tw, int th, const std::string base64ImageData, int sx,
                           int sy, int sw, int sh, int dx, int dy, int dw, int dh) {
     if (contextId.empty()) {
         return;
@@ -124,7 +135,7 @@ void gCanvasDrawImageData(const std::string contextId, int tw, int th, const std
     }
 }
 
-void gCanvasDrawCanvas2Canvas(const std::string contextId, int tw, int th, const std::string srcContextId, int sx,
+inline void gCanvasDrawCanvas2Canvas(const std::string contextId, int tw, int th, const std::string srcContextId, int sx,
                               int sy, int sw, int sh, int dx, int dy, int dw, int dh) {
 
     if (contextId.empty() || srcContextId.empty()) {
@@ -137,7 +148,7 @@ void gCanvasDrawCanvas2Canvas(const std::string contextId, int tw, int th, const
     gCanvasDrawImageData(contextId, tw, th, base64ImageData, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
-void glResetComponent(const std::string componentId) {
+inline void glResetComponent(const std::string componentId) {
     GCanvasManager *theManager = GCanvasManager::GetManager();
     GCanvasWeex *theCanvas = (GCanvasWeex *)theManager->GetCanvas(componentId);
     if (theCanvas) {
@@ -145,3 +156,56 @@ void glResetComponent(const std::string componentId) {
         LOG_D("GCanvas ResetComponent clearCmdQueue done");
     }
 }
+
+inline void glSetExtraFontLocation(std::string path){
+    SystemFontInformation::GetSystemFontInformation()
+    ->SetExtraFontLocation(path.c_str());
+}
+
+inline void glInsertFontFamily(const char *fontName, std::list<const char *> &fontFileList){
+    SystemFontInformation::GetSystemFontInformation()
+    ->InsertFontFamily(fontName,fontFileList);
+}
+
+inline void glSetSystemFontLocation(std::string path) {
+    SystemFontInformation::GetSystemFontInformation()
+        ->SetSystemFontLocation(path.c_str());
+}
+
+inline void glSetDefaultFontFile(std::string fontFile) {
+    SystemFontInformation::GetSystemFontInformation()
+        ->SetDefaultFontFile(fontFile.c_str());
+}
+
+inline bool glHasFontFamily(std::string fontName) {
+    return SystemFontInformation::GetSystemFontInformation()
+        ->FindFontFamily(fontName.c_str()) != nullptr;
+}
+
+inline void glInsertFontFamily(std::string fontName, std::string fontFile) {
+    if (fontName.empty() || fontFile.empty()) {
+        return;
+    }
+
+    std::list<const char *> fontFileList;
+    fontFileList.push_back(fontFile.c_str());
+
+    SystemFontInformation::GetSystemFontInformation()
+        ->InsertFontFamily(fontName.c_str(), fontFileList);
+}
+
+inline std::vector<std::string> glGetFontNames() {
+    std::vector<std::string> result;
+
+    auto fontFamilies = SystemFontInformation::GetSystemFontInformation()
+        ->getFontFamilies();
+
+    for (auto it = fontFamilies->begin(); it != fontFamilies->end(); ++it) {
+        if ((*it).first != nullptr) {
+            result.push_back((*it).first);
+        }
+    }
+
+    return result;
+}
+} // namespace rnoh

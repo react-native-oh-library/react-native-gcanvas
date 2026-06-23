@@ -18,7 +18,7 @@ const getFontNames = () => {
 let extraFontLocation = null;
 
 const setExtraFontLocation = (location) => {
-  if (Platform.OS === 'android') {
+  if (Platform.OS === 'android' || Platform.OS === 'harmony') {
     const fontLocation = location.endsWith('/') ? location : `${location}/`;
     if ('/system/fonts/' === fontLocation) {
       // SYSTEM_FONT_LOCATION = "/system/fonts/" in
@@ -58,7 +58,7 @@ const setExtraFontLocation = (location) => {
  * @param {string} [fontFace.family] - 字体家族名称。如果未提供，则使用文件名作为字体名称
  */
 const registerFont = (src, fontFace) => {
-  if (Platform.OS === 'android') {
+  if (Platform.OS === 'android' || Platform.OS === 'harmony') {
     const fontFile = src.substring(src.lastIndexOf('/') + 1);
     const fontLocation = src.substring(0, src.lastIndexOf('/') + 1);
     setExtraFontLocation(fontLocation);

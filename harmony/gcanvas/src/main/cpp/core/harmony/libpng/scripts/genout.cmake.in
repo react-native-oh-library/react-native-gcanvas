@@ -23,6 +23,18 @@ set(PNGLIB_VERSION "@PNGLIB_VERSION@")
 set(ZLIBINCDIR "@ZLIB_INCLUDE_DIR@")
 
 set(PLATFORM_C_FLAGS)
+# OpenHarmony / cross-compile: this manual preprocessor invocation does not
+# automatically inherit the toolchain target & sysroot, so arch-specific
+# headers (e.g. bits/alltypes.h) cannot be found. Inject them explicitly.
+set(CMAKE_C_COMPILER_TARGET "@CMAKE_C_COMPILER_TARGET@")
+set(CMAKE_SYSROOT "@CMAKE_SYSROOT@")
+if(CMAKE_C_COMPILER_TARGET)
+  set(PLATFORM_C_FLAGS ${PLATFORM_C_FLAGS} "--target=${CMAKE_C_COMPILER_TARGET}")
+endif()
+if(CMAKE_SYSROOT)
+  set(PLATFORM_C_FLAGS ${PLATFORM_C_FLAGS} "--sysroot=${CMAKE_SYSROOT}")
+endif()
+
 if(APPLE)
   set(CMAKE_OSX_ARCHITECTURES "@CMAKE_OSX_ARCHITECTURES@")
   set(CMAKE_OSX_SYSROOT "@CMAKE_OSX_SYSROOT@")

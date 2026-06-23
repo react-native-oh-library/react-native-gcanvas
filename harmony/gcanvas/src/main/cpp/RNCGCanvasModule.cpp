@@ -1,8 +1,17 @@
-//
-// Created on 2026/3/20.
-//
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
+/*
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "RNCGCanvasModule.h"
 #include "RNOH/RNInstanceCAPI.h"
@@ -309,7 +318,7 @@ jsi::Value __hostFunction_setLogLevel(facebook::jsi::Runtime &rt, react::TurboMo
 jsi::Value __hostFunction_getFontNames(facebook::jsi::Runtime &rt, react::TurboModule &turboModule,
                                        const facebook::jsi::Value *args, size_t count) {
 
-    auto fontArray = get_sys_font_name();
+    auto fontArray = get_gcanvas_font_names();
     jsi::Array resultArray = jsi::Array(rt, fontArray.size());
     for (int i = 0; i < fontArray.size(); i++) {
         resultArray.setValueAtIndex(rt, i, jsi::String::createFromUtf8(rt, fontArray[i]));
@@ -362,6 +371,42 @@ jsi::Value __hostFunction_resetComponent(facebook::jsi::Runtime &rt, react::Turb
     return facebook::jsi::Value::undefined();
 }
 
+jsi::Value __hostFunction_addFontFamily(facebook::jsi::Runtime &rt, react::TurboModule &turboModule,
+                                        const facebook::jsi::Value *args, size_t count) {
+    if (count == 2 && args[0].isObject() && args[1].isObject()) {
+        jsi::Array fontNameArray = args[0].getObject(rt).asArray(rt);
+        jsi::Array fontFileArray = args[1].getObject(rt).asArray(rt);
+
+        size_t fontNameSize = fontNameArray.size(rt);
+        size_t fontFileSize = fontFileArray.size(rt);
+        size_t size = fontNameSize < fontFileSize ? fontNameSize : fontFileSize;
+
+        for (size_t i = 0; i < size; i++) {
+            jsi::Value fontNameValue = fontNameArray.getValueAtIndex(rt, i);
+            jsi::Value fontFileValue = fontFileArray.getValueAtIndex(rt, i);
+
+            if (!fontNameValue.isString() || !fontFileValue.isString()) {
+                continue;
+            }
+
+            std::string fontName = fontNameValue.getString(rt).utf8(rt);
+            std::string fontFile = fontFileValue.getString(rt).utf8(rt);
+
+            add_gcanvas_font_family(fontName, fontFile);
+        }
+    }
+
+    return facebook::jsi::Value::undefined();
+}
+
+jsi::Value __hostFunction_setExtraFontLocation(facebook::jsi::Runtime &rt, react::TurboModule &turboModule,
+                                        const facebook::jsi::Value *args, size_t count) {
+   if (count >= 1 && args[0].isString()) {
+        std::string path = args[0].getString(rt).utf8(rt);
+        set_gcanvas_extra_font_location(path);
+    }
+    return facebook::jsi::Value::undefined();
+}
 
 RNCGCanvasModule::RNCGCanvasModule(const ArkTSTurboModule::Context ctx, const std::string name)
     : ArkTSTurboModule(ctx, name) {
@@ -381,6 +426,9 @@ RNCGCanvasModule::RNCGCanvasModule(const ArkTSTurboModule::Context ctx, const st
     methodMap_["texSubImage2D"] = MethodMetadata{7, __hostFunction_texSubImage2D};
     methodMap_["resetComponent"] = MethodMetadata{1, __hostFunction_resetComponent};
     methodMap_["disable"] = MethodMetadata{1, __hostFunction_disabled};
+    methodMap_["addFontFamily"] = MethodMetadata{2, __hostFunction_addFontFamily};
+    methodMap_["setExtraFontLocation"] = MethodMetadata{1, __hostFunction_setExtraFontLocation};
+    init_gcanvas_system_fonts();
 }
 
 RNCGCanvasModule::~RNCGCanvasModule() {

@@ -23,8 +23,8 @@ GCanvasState::GCanvasState()
 
     mFont = nullptr; // delay-load: "10px sans-serif"
 
-    mTextAlign = TEXT_ALIGN_START;
-    mTextBaseline = TEXT_BASELINE_ALPHABETIC;
+    mTextAlign = GTEXT_ALIGN_START;
+    mTextBaseline = GTEXT_BASELINE_ALPHABETIC;
     mTransform = GTransformIdentity;
     mClipPath = nullptr;
     mShader = nullptr;
