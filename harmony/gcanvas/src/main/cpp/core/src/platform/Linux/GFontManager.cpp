@@ -151,8 +151,8 @@ void GFontManagerImplement::adjustTextPenPoint(std::vector<GFont *> font,
         /*out*/ float &x,
         /*out*/ float &y)
 {
-    if (mContext->mCurrentState->mTextAlign != GTextAlign::TEXT_ALIGN_START &&
-        mContext->mCurrentState->mTextAlign != GTextAlign::TEXT_ALIGN_LEFT)
+    if (mContext->mCurrentState->mTextAlign != GTextAlign::GTEXT_ALIGN_START &&
+        mContext->mCurrentState->mTextAlign != GTextAlign::GTEXT_ALIGN_LEFT)
     {
         auto left_x = x;
         auto delta_x = 0.0f;
@@ -166,7 +166,7 @@ void GFontManagerImplement::adjustTextPenPoint(std::vector<GFont *> font,
             }
         }
 
-        if (mContext->mCurrentState->mTextAlign == GTextAlign::TEXT_ALIGN_CENTER)
+        if (mContext->mCurrentState->mTextAlign == GTextAlign::GTEXT_ALIGN_CENTER)
         {
             x = left_x - delta_x / 2.0f;
         }
@@ -184,18 +184,18 @@ void GFontManagerImplement::adjustTextPenPoint(std::vector<GFont *> font,
 
     switch (mContext->mCurrentState->mTextBaseline)
     {
-        case TEXT_BASELINE_TOP:
-        case TEXT_BASELINE_HANGING:
+        case GTEXT_BASELINE_TOP:
+        case GTEXT_BASELINE_HANGING:
             y += fabs(ascender);
             break;
-        case TEXT_BASELINE_BOTTOM:
-        case TEXT_BASELINE_IDEOGRAPHIC:
+        case GTEXT_BASELINE_BOTTOM:
+        case GTEXT_BASELINE_IDEOGRAPHIC:
             y -= fabs(descender);
             break;
-        case TEXT_BASELINE_MIDDLE:
+        case GTEXT_BASELINE_MIDDLE:
             y += (fabs(ascender) - fabs(descender)) / 2.0f;
             break;
-        case TEXT_BASELINE_ALPHABETIC:
+        case GTEXT_BASELINE_ALPHABETIC:
         default:
             break;
     }

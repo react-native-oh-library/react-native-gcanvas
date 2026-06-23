@@ -539,30 +539,30 @@ static NSMutableDictionary *staticFontInstaceDict;
                      metrics:(GTextMetrics)metrics
 {
     switch (textAlign) {
-        case GTextAlign::TEXT_ALIGN_START:
-        case GTextAlign::TEXT_ALIGN_LEFT:
+        case GTextAlign::GTEXT_ALIGN_START:
+        case GTextAlign::GTEXT_ALIGN_LEFT:
             break;
-        case GTextAlign::TEXT_ALIGN_CENTER:
+        case GTextAlign::GTEXT_ALIGN_CENTER:
             srcPoint.x -= metrics.width/2.0f;
             break;
-        case GTextAlign::TEXT_ALIGN_END:
-        case GTextAlign::TEXT_ALIGN_RIGHT:
+        case GTextAlign::GTEXT_ALIGN_END:
+        case GTextAlign::GTEXT_ALIGN_RIGHT:
             srcPoint.x -= metrics.width;
             break;
     }
     
     switch( baseLine ) {
-        case GTextBaseline::TEXT_BASELINE_ALPHABETIC:
-        case GTextBaseline::TEXT_BASELINE_IDEOGRAPHIC:
+        case GTextBaseline::GTEXT_BASELINE_ALPHABETIC:
+        case GTextBaseline::GTEXT_BASELINE_IDEOGRAPHIC:
             break;
-        case GTextBaseline::TEXT_BASELINE_TOP:
-        case GTextBaseline::TEXT_BASELINE_HANGING:
+        case GTextBaseline::GTEXT_BASELINE_TOP:
+        case GTextBaseline::GTEXT_BASELINE_HANGING:
             srcPoint.y += ascent;
             break;
-        case GTextBaseline::TEXT_BASELINE_MIDDLE:
+        case GTextBaseline::GTEXT_BASELINE_MIDDLE:
             srcPoint.y += capHeight/2;
             break;
-        case GTextBaseline::TEXT_BASELINE_BOTTOM:
+        case GTextBaseline::GTEXT_BASELINE_BOTTOM:
             srcPoint.y -= descent;
             break;
     }

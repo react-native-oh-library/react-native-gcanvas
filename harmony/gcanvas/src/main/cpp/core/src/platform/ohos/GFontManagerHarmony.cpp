@@ -213,8 +213,8 @@ void GFontManagerHarmony::AdjustTextPenPoint(std::vector<GFont *> fonts,
                                              bool isStroke,
         /*out*/ float &x,
         /*out*/ float &y) {
-    if (mContext->mCurrentState->mTextAlign != GTextAlign::TEXT_ALIGN_START &&
-        mContext->mCurrentState->mTextAlign != GTextAlign::TEXT_ALIGN_LEFT) {
+    if (mContext->mCurrentState->mTextAlign != GTextAlign::GTEXT_ALIGN_START &&
+        mContext->mCurrentState->mTextAlign != GTextAlign::GTEXT_ALIGN_LEFT) {
         auto left_x = x;
         auto delta_x = 0.0f;
         for (unsigned int i = 0; i < ucsLength; ++i) {
@@ -233,7 +233,7 @@ void GFontManagerHarmony::AdjustTextPenPoint(std::vector<GFont *> fonts,
             }
         }
 
-        if (mContext->mCurrentState->mTextAlign == GTextAlign::TEXT_ALIGN_CENTER) {
+        if (mContext->mCurrentState->mTextAlign == GTextAlign::GTEXT_ALIGN_CENTER) {
             x = left_x - delta_x / 2.0f;
         } else // textAlign is "Right" or "End"
         {
@@ -253,30 +253,30 @@ void GFontManagerHarmony::AdjustTextPenPoint(std::vector<GFont *> fonts,
     float m_descender = mContext->mCurrentState->mFont->GetDescender();
 
     switch (mContext->mCurrentState->mTextBaseline) {
-        case TEXT_BASELINE_TOP:
-        case TEXT_BASELINE_HANGING:
+        case GTEXT_BASELINE_TOP:
+        case GTEXT_BASELINE_HANGING:
             if (m_ascender > 0 && m_descender > 0) {
                 y += fabs(m_ascender);
             } else {
                 y += fabs(ascender);
             }
             break;
-        case TEXT_BASELINE_BOTTOM:
-        case TEXT_BASELINE_IDEOGRAPHIC:
+        case GGTEXT_BASELINE_BOTTOM:
+        case GTEXT_BASELINE_IDEOGRAPHIC:
             if (m_ascender > 0 && m_descender > 0) {
                 y -= fabs(m_descender);
             } else {
                 y -= fabs(descender);
             }
             break;
-        case TEXT_BASELINE_MIDDLE:
+        case GTEXT_BASELINE_MIDDLE:
             if (m_ascender > 0 && m_descender > 0) {
                 y += (fabs(m_ascender) - fabs(m_descender)) / 2.0f;
             } else {
                 y += (fabs(ascender) - fabs(descender)) / 2.0f;
             }
             break;
-        case TEXT_BASELINE_ALPHABETIC:
+        case GTEXT_BASELINE_ALPHABETIC:
         default:
             break;
     }

@@ -459,16 +459,16 @@ void prepareCases(std::unordered_map<std::string, std::function<void(std::shared
         ctx->LineTo(125 * ratio, 300 * ratio);
         ctx->Stroke();
         ctx->SetFont("15px Arial-MT");
-        ctx->SetTextAlign(TEXT_ALIGN_START);
+        ctx->SetTextAlign(GTEXT_ALIGN_START);
         ctx->DrawText("textAlign=start", 125 * ratio, 10 * ratio);
-        ctx->SetTextAlign(TEXT_ALIGN_END);
+        ctx->SetTextAlign(GTEXT_ALIGN_END);
         ctx->SetFont("15px");
         ctx->DrawText("textAlign=end", 125 * ratio, 50 * ratio);
-        ctx->SetTextAlign(TEXT_ALIGN_LEFT);
+        ctx->SetTextAlign(GTEXT_ALIGN_LEFT);
         ctx->DrawText("textAlign=left", 125 * ratio, 100 * ratio);
-        ctx->SetTextAlign(TEXT_ALIGN_CENTER);
+        ctx->SetTextAlign(GTEXT_ALIGN_CENTER);
         ctx->DrawText("textAlign=center", 125 * ratio, 150 * ratio);
-        ctx->SetTextAlign(TEXT_ALIGN_RIGHT);
+        ctx->SetTextAlign(GTEXT_ALIGN_RIGHT);
         ctx->DrawText("textAlign=right", 125 * ratio, 200 * ratio);
     };
 
@@ -779,15 +779,15 @@ void prepareCases(std::unordered_map<std::string, std::function<void(std::shared
         ctx->LineTo(250 * ratio, 125 * ratio);
         ctx->Stroke();
         ctx->SetFont("20px Arial");
-        ctx->SetTextBaseline(TEXT_BASELINE_TOP);
+        ctx->SetTextBaseline(GTEXT_BASELINE_TOP);
         ctx->DrawText("Top", 10 * ratio, 125 * ratio);
-        ctx->SetTextBaseline(TEXT_BASELINE_BOTTOM);
+        ctx->SetTextBaseline(GTEXT_BASELINE_BOTTOM);
         ctx->DrawText("Bottom", 50 * ratio, 125 * ratio);
-        ctx->SetTextBaseline(TEXT_BASELINE_MIDDLE);
+        ctx->SetTextBaseline(GTEXT_BASELINE_MIDDLE);
         ctx->DrawText("Middle", 100 * ratio, 125 * ratio);
-        ctx->SetTextBaseline(TEXT_BASELINE_ALPHABETIC);
+        ctx->SetTextBaseline(GTEXT_BASELINE_ALPHABETIC);
         ctx->DrawText("Alphabetic", 150 * ratio, 125 * ratio);
-        ctx->SetTextBaseline(TEXT_BASELINE_HANGING);
+        ctx->SetTextBaseline(GTEXT_BASELINE_HANGING);
         ctx->DrawText("Hanging", 200 * ratio, 125 * ratio);
     };
 

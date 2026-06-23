@@ -1,13 +1,21 @@
-//
-// Created on 2026/5/7.
-//
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
+/*
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <list>
 #include <multimedia/image_framework/image/image_common.h>
 #include <multimedia/image_framework/image/image_source_native.h>
 #include <multimedia/image_framework/image/pixelmap_native.h>
-#include <native_drawing/drawing_types.h>
-#include <native_drawing/drawing_font_mgr.h>
 #include <string>
 #include <random>
 #include <iomanip>
@@ -15,6 +23,13 @@
 #include "core/src/support/Log.h"
 #include "libbase64.h"
 #include <multimedia/image_framework/image/image_packer_native.h>
+#include "core/src/RNCGCanvasBridge.h"
+#include <dirent.h>
+#include <sys/stat.h>
+#include <algorithm>
+#include <cctype>
+#include <set>
+#include <vector>
 
 namespace rnoh {
 
@@ -183,20 +198,168 @@ inline std::string decodeCode_pixelmap(OH_PixelmapNative *data, std::string mime
     return dataUrl;
 }
 
+inline std::string gcanvas_to_lower_font_name(const std::string &value) {
+    std::string result = value;
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    return result;
+}
 
-inline std::vector<std::string> get_sys_font_name() {
+inline std::string gcanvas_replace_font_separator_to_space(const std::string &value) {
+    std::string result = value;
+    std::replace(result.begin(), result.end(), '_', ' ');
+    std::replace(result.begin(), result.end(), '-', ' ');
+    return result;
+}
+
+inline bool gcanvas_is_font_file(const std::string &fileName) {
+    std::string lowerName = gcanvas_to_lower_font_name(fileName);
+    return lowerName.size() > 4 &&
+           (lowerName.rfind(".ttf") == lowerName.size() - 4 ||
+            lowerName.rfind(".otf") == lowerName.size() - 4 ||
+            lowerName.rfind(".ttc") == lowerName.size() - 4);
+}
+
+inline std::string gcanvas_remove_font_ext(const std::string &fileName) {
+    size_t pos = fileName.find_last_of('.');
+    if (pos == std::string::npos) {
+        return fileName;
+    }
+    return fileName.substr(0, pos);
+}
+
+inline bool gcanvas_file_exists(const std::string &path) {
+    struct stat buffer {};
+    return stat(path.c_str(), &buffer) == 0 && S_ISREG(buffer.st_mode);
+}
+
+inline void gcanvas_insert_font_family(const std::string &fontName, const std::string &fontFile) {
+    if (fontName.empty() || fontFile.empty()) {
+        return;
+    }
+
+    if (glHasFontFamily(fontName)) {
+        return;
+    }
+
+    glInsertFontFamily(fontName, fontFile);
+}
+
+inline void gcanvas_insert_font_family_with_alias(const std::string &fontName, const std::string &fontFile) {
+    if (fontName.empty() || fontFile.empty()) {
+        return;
+    }
+
+    std::string lowerName = gcanvas_to_lower_font_name(fontName);
+    std::string spaceName = gcanvas_replace_font_separator_to_space(fontName);
+    std::string lowerSpaceName = gcanvas_to_lower_font_name(spaceName);
+
+    gcanvas_insert_font_family(fontName, fontFile);
+    gcanvas_insert_font_family(lowerName, fontFile);
+
+    if (spaceName != fontName) {
+        gcanvas_insert_font_family(spaceName, fontFile);
+    }
+
+    if (lowerSpaceName != lowerName && lowerSpaceName != spaceName) {
+        gcanvas_insert_font_family(lowerSpaceName, fontFile);
+    }
+}
+
+inline std::string gcanvas_find_default_system_font_file(const std::string &systemFontLocation) {
+    std::vector<std::string> candidates = {
+        "HarmonyOS_Sans.ttf"
+    };
+    for (auto &fileName : candidates) {
+        if (gcanvas_file_exists(systemFontLocation + fileName)) {
+            return fileName;
+        }
+    }
+    return "";
+}
+
+inline void init_gcanvas_system_fonts() {
+    static bool initialized = false;
+    if (initialized) {
+        return;
+    }
+    initialized = true;
+
+    const std::string systemFontLocation = "/system/fonts/";
+
+    glSetSystemFontLocation(systemFontLocation);
+
+    std::string defaultFontFile = gcanvas_find_default_system_font_file(systemFontLocation);
+    if (!defaultFontFile.empty()) {
+        glSetDefaultFontFile(defaultFontFile);
+
+        gcanvas_insert_font_family_with_alias("sans-serif", defaultFontFile);
+        gcanvas_insert_font_family_with_alias("sans", defaultFontFile);
+        gcanvas_insert_font_family_with_alias("default", defaultFontFile);
+    }
+
+    DIR *dir = opendir(systemFontLocation.c_str());
+    if (dir == nullptr) {
+        LOG_E("init_gcanvas_system_fonts open system font dir failed:%s", systemFontLocation.c_str());
+        return;
+    }
+
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dir)) != nullptr) {
+        std::string fontFile = entry->d_name;
+        if (!gcanvas_is_font_file(fontFile)) {
+            continue;
+        }
+
+        std::string fontName = gcanvas_remove_font_ext(fontFile);
+        gcanvas_insert_font_family_with_alias(fontName, fontFile);
+    }
+
+    closedir(dir);
+}
+
+inline std::vector<std::string> get_gcanvas_font_names() {
+    init_gcanvas_system_fonts();
+
     std::vector<std::string> result;
-    OH_Drawing_FontMgr *fontMgr = OH_Drawing_FontMgrCreate();
-    int familyCount = OH_Drawing_FontMgrGetFamilyCount(fontMgr);
-    for (int i = 0; i < familyCount; i++) {
-        char *familyName = OH_Drawing_FontMgrGetFamilyName(fontMgr, i);
-        if (familyName) {
-            result.push_back(familyName);
-            OH_Drawing_FontMgrDestroyFamilyName(familyName);
+    std::set<std::string> exists;
+
+    auto fontNames = glGetFontNames();
+    for (auto &fontName : fontNames) {
+        if (!fontName.empty() && exists.insert(fontName).second) {
+            result.push_back(fontName);
         }
     }
 
-    OH_Drawing_FontMgrDestroy(fontMgr);
     return result;
 }
+
+inline void set_gcanvas_extra_font_location(const std::string &fontLocation) {
+    if (fontLocation.empty()) {
+        return;
+    }
+
+    std::string location = fontLocation;
+    if (location.back() != '/') {
+        location += "/";
+    }
+
+    glSetExtraFontLocation(location);
+
+    LOG_D("set_gcanvas_extra_font_location:%s", location.c_str());
+}
+
+inline void add_gcanvas_font_family(const std::string &fontName, const std::string &fontFile) {
+    if (fontName.empty() || fontFile.empty()) {
+        return;
+    }
+
+    init_gcanvas_system_fonts();
+
+    gcanvas_insert_font_family_with_alias(fontName, fontFile);
+
+    LOG_D("add_gcanvas_font_family fontName:%s fontFile:%s", fontName.c_str(), fontFile.c_str());
+}
+
 }
